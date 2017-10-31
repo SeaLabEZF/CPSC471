@@ -45,6 +45,7 @@ namespace ServerSide
                 writer.WriteLine("YOU ARE CONNECTED");
                 writer.Flush();
                 writer.WriteLine("I will repeat after you. Send a blank line to quit.");
+                writer.Flush();
 
                 string line = null;
 
