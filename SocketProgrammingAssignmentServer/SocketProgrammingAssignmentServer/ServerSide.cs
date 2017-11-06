@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -35,6 +36,15 @@ namespace ServerSide
             }
         }
 
+        public static bool IsLinux
+        {
+            get
+            {
+                int r = (int)Environment.OSVersion.Platform;
+                return (r == 4) || (r == 6) || (r == 128);
+            }
+        }
+
         //called whenever a client connects to the server
         private async void HandleAcceptTcpClient(IAsyncResult result)
         {
@@ -50,7 +60,7 @@ namespace ServerSide
             using (StreamReader reader = new StreamReader(stream, Encoding.ASCII))
             {
                 //send this to let the client know we accepted the connection
-                writer.WriteLine("ftp");
+                writer.Write("ftp>");
                 writer.Flush();
 
                 //we will keep looping later until we quit
@@ -78,6 +88,21 @@ namespace ServerSide
                         else if (args[0] == "ls") //possibly add 'cd' - or are we supposed to make a 'ls -l' like directory tree?
                         {
                             //list the file
+                            Process proc = new Process();
+                            proc.StartInfo.CreateNoWindow = true;
+                            proc.StartInfo.RedirectStandardInput = true;
+                            proc.StartInfo.RedirectStandardOutput = true;
+                            proc.StartInfo.UseShellExecute = false;
+                            proc.Start();
+                            if (IsLinux)
+                                proc.StandardInput.WriteLine("ls");
+                            else
+                                proc.StandardInput.WriteLine("dir");
+                            proc.StandardInput.Flush();
+                            proc.StandardInput.Close();
+                            proc.WaitForExit();
+                            writer.Write("ftp>" + proc.StandardOutput.ReadToEnd());
+                            writer.Flush();
                         }
                         else if (args[0] == "quit")
                         {
