@@ -87,17 +87,25 @@ namespace ServerSide
                         }
                         else if (args[0] == "ls") //possibly add 'cd' - or are we supposed to make a 'ls -l' like directory tree?
                         {
+                            string temp = null;
                             //list the file
                             Process proc = new Process();
+                            if (IsLinux)
+                            {
+                                proc.StartInfo.FileName = "/bin/bash";
+                                temp = "ls";
+                            }
+                            else
+                            {
+                                proc.StartInfo.FileName = "cmd.exe";
+                                temp = "dir";
+                            }
                             proc.StartInfo.CreateNoWindow = true;
                             proc.StartInfo.RedirectStandardInput = true;
                             proc.StartInfo.RedirectStandardOutput = true;
                             proc.StartInfo.UseShellExecute = false;
                             proc.Start();
-                            if (IsLinux)
-                                proc.StandardInput.WriteLine("ls");
-                            else
-                                proc.StandardInput.WriteLine("dir");
+                            proc.StandardInput.WriteLine(temp);
                             proc.StandardInput.Flush();
                             proc.StandardInput.Close();
                             proc.WaitForExit();
