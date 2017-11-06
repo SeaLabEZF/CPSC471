@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -11,51 +11,92 @@ namespace ServerSide
 {
     public class FtpServer
     {
+        //create a listener for TCP events
         private TcpListener listener;
 
+        //initializer for the FTP Server
         public FtpServer()
         { }
 
-        public void Start()
+        //starts the TCP listener and sends the connections to HandleAcceptTcpClient
+        public void Start(int port_number)
         {
-            listener = new TcpListener(IPAddress.Any, 21);
+            listener = new TcpListener(IPAddress.Any, port_number);
             listener.Start();
             listener.BeginAcceptTcpClient(HandleAcceptTcpClient, listener);
         }
 
+        //stops the listener from listening to TCP events
         public void Stop()
         {
-            if(listener != null)
+            if (listener != null)
             {
                 listener.Stop();
             }
         }
 
-        private void HandleAcceptTcpClient(IAsyncResult result)
+        //called whenever a client connects to the server
+        private async void HandleAcceptTcpClient(IAsyncResult result)
         {
+            //get a refernce to the client
             TcpClient client = listener.EndAcceptTcpClient(result);
+
+            //further connectsion will also be handled by this method
             listener.BeginAcceptTcpClient(HandleAcceptTcpClient, listener);
-            //we're connected now we worry about everything else
 
+            //get the stream from the client and set up a reader and a writer
             NetworkStream stream = client.GetStream();
-
             using (StreamWriter writer = new StreamWriter(stream, Encoding.ASCII))
             using (StreamReader reader = new StreamReader(stream, Encoding.ASCII))
             {
-                writer.WriteLine("YOU ARE CONNECTED");
-                writer.Flush();
-                writer.WriteLine("I will repeat after you. Send a blank line to quit.");
+                //send this to let the client know we accepted the connection
+                writer.WriteLine("ftp");
                 writer.Flush();
 
-                string line = null;
+                //we will keep looping later until we quit
+                bool quit = false;
 
-                while(!string.IsNullOrEmpty(line = reader.ReadLine()))
+                //read in the inital line
+                string line = await reader.ReadLineAsync();
+
+                //while (!quit && !string.IsNullOrEmpty(line))
+                //loop until we are told to quit
+                while (!quit)
                 {
-                    writer.WriteLine("Echoing back: {0}", line);
+                    //split the line by spaces
+                    var args = line.Split(' ');
+                    if (args.Length > 0)
+                    {
+                        if (args[0] == "get")
+                        {
+                            //set up a new connection to send the file
+                        }
+                        else if (args[0] == "put")
+                        {
+                            //set up a new connection to recieve the file
+                        }
+                        else if (args[0] == "ls") //possibly add 'cd' - or are we supposed to make a 'ls -l' like directory tree?
+                        {
+                            //list the file
+                        }
+                        else if (args[0] == "quit")
+                        {
+                            //set quit to true
+                            quit = true;
+                        }
+                        else
+                        {
+                            writer.WriteLine("'" + line + "' isn't an accepted command.");
+                        }
+                    }
+                    else
+                    {
+                        writer.WriteLine("<Empty Line> isn't an accepted command.");
+                    }
                     writer.Flush();
+                    line = await reader.ReadLineAsync();
                 }
             }
-
         }
     }
 }
