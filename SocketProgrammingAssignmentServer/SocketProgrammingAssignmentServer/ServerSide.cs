@@ -110,7 +110,6 @@ namespace ServerSide
                             proc.StandardInput.Close();
                             proc.WaitForExit();
                             writer.Write("ftp>" + proc.StandardOutput.ReadToEnd());
-                            writer.Flush();
                         }
                         else if (args[0] == "quit")
                         {
