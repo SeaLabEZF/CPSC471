@@ -80,10 +80,40 @@ namespace ServerSide
                         if (args[0] == "get")
                         {
                             //set up a new connection to send the file
+                            FtpWebRequest request = (FtpWebRequest)WebRequest.Create("something");
+                            request.Method = WebRequestMethods.Ftp.UploadFile;
+
+                            StreamReader sourceStream = new StreamReader(args[1]);
+                            byte[] fileContents = Encoding.UTF8.GetBytes(sourceStream.ReadToEnd());
+                            sourceStream.Close();
+                            request.ContentLength = fileContents.Length;
+
+                            Stream requestStream = request.GetRequestStream();
+                            requestStream.Write(fileContents, 0, fileContents.Length);
+                            requestStream.Close();
+
+                            FtpWebResponse response = (FtpWebResponse)request.GetResponse();
+
+                            writer.WriteLine("Download File Complete, status {0}", response.StatusCode);
+
+                            response.Close();
                         }
                         else if (args[0] == "put")
                         {
                             //set up a new connection to recieve the file
+                            FtpWebRequest request = (FtpWebRequest)WebRequest.Create("something");
+                            request.Method = WebRequestMethods.Ftp.DownloadFile;
+
+                            FtpWebResponse response = (FtpWebResponse)request.GetResponse();
+
+                            Stream responseStream = response.GetResponseStream();
+                            StreamReader dataReader = new StreamReader(responseStream);
+                            writer.WriteLine(dataReader.ReadToEnd());
+
+                            writer.WriteLine("Upload Complete, status {0}", response.StatusCode);
+
+                            dataReader.Close();
+                            response.Close();
                         }
                         else if (args[0] == "ls") //possibly add 'cd' - or are we supposed to make a 'ls -l' like directory tree?
                         {
