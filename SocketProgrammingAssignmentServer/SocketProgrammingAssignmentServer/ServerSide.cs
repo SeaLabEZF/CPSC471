@@ -94,7 +94,7 @@ namespace ServerSide
 
                             FtpWebResponse response = (FtpWebResponse)request.GetResponse();
 
-                            writer.WriteLine("Download File Complete, status {0}", response.StatusCode);
+                            writer.WriteLine("Download Complete, status {0}", response.StatusCode);
 
                             response.Close();
                         }
