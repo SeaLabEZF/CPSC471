@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,21 +8,25 @@ using System.Net.Sockets;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace ServerSide
+namespace ClientSide
 {
-    public class FtpServer
+    public class FtpClient
     {
         //create a listener for TCP events
         private TcpListener listener;
+        public Boolean quit;
 
         //initializer for the FTP Server
-        public FtpServer()
+        public FtpClient()
         { }
 
         //starts the TCP listener and sends the connections to HandleAcceptTcpClient
-        public void Start(int port_number)
+        public void Start(String ip_address, uint port_number)
         {
-            listener = new TcpListener(IPAddress.Any, port_number);
+            //we shouldnt' quit unti lwe feel like it
+            quit = false;
+
+            listener = new TcpListener(IPAddress.Any, (int)port_number);
             listener.Start();
             listener.BeginAcceptTcpClient(HandleAcceptTcpClient, listener);
         }
