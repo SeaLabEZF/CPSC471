@@ -85,7 +85,7 @@ namespace SocketProgrammingAssignmentServer
                                     //if we can parse the unit, we assume it is a port number
                                     //and the program will be running in FTP Client mode
                                     FtpClient client = new FtpClient();
-                                    client.Start(ips[0].ToString(), port_number);
+                                    client.Start(ips, port_number);
 
                                     //wait until we are required to quit to quit
                                     while (!client.quit)
