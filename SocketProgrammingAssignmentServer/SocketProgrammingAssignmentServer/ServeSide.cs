@@ -36,15 +36,6 @@ namespace ServerSide
             }
         }
 
-        public static bool IsLinux
-        {
-            get
-            {
-                int r = (int)Environment.OSVersion.Platform;
-                return (r == 4) || (r == 6) || (r == 128);
-            }
-        }
-
         //called whenever a client connects to the server
         private async void HandleAcceptTcpClient(IAsyncResult result)
         {
@@ -120,16 +111,9 @@ namespace ServerSide
                             string temp = null;
                             //list the file
                             Process proc = new Process();
-                            if (IsLinux)
-                            {
-                                proc.StartInfo.FileName = "/bin/bash";
-                                temp = "ls";
-                            }
-                            else
-                            {
-                                proc.StartInfo.FileName = "cmd.exe";
-                                temp = "dir";
-                            }
+                            
+                            proc.StartInfo.FileName = "cmd.exe";
+                            temp = "dir";
                             proc.StartInfo.CreateNoWindow = true;
                             proc.StartInfo.RedirectStandardInput = true;
                             proc.StartInfo.RedirectStandardOutput = true;
