@@ -107,12 +107,12 @@ namespace ServerSide
                                 response = Passive();
                                 break;
                             case "GET":
-                                //response = GET(arguments);
+                                response = Retrieve(arguments);
                                 break;
                             case "PUT":
                                 break;
                             case "LS":
-                                //response = LS(arguments);
+                                response = List(arguments);
                                 break;
                             case "QUIT":
                                 response = "221 Service closing control connection";
@@ -269,6 +269,83 @@ namespace ServerSide
 
             _controlWriter.WriteLine("226 Transfer complete");
             _controlWriter.Flush();
+        }
+        private string Retrieve(string pathname)
+        {
+            if(File.Exists(pathname))
+            {
+                _dataClient = new TcpClient();
+                _dataClient.BeginConnect(_dataEndpoint.Address, _dataEndpoint.Port, DoRetrieve, pathname);
+                return string.Format("150 get");
+            }
+            return "550 File Not Found";
+        }
+        private void DoRetrieve(IAsyncResult result)
+        {
+            _dataClient.EndConnect(result);
+
+            string pathname = (string)result.AsyncState;
+
+            using (NetworkStream dataStream = _dataClient.GetStream())
+            {
+                using (FileStream fs = new FileStream(pathname, FileMode.Open, FileAccess.Read))
+                {
+                    copyStream(fs, dataStream);
+
+                    _dataClient.Close();
+                    _dataClient = null;
+
+                    _controlWriter.WriteLine("226 Closing data connection, file transfer successful");
+                    _controlWriter.Flush();
+                }
+            }
+        }
+
+        private static long copyStream(Stream input, Stream output, int bufferSize)
+        {
+            byte[] buffer = new byte[bufferSize];
+            int count = 0;
+            long total = 0;
+
+            while ((count = input.Read(buffer, 0, buffer.Length))>0)
+            {
+                output.Write(buffer, 0, count);
+                total += count;
+            }
+
+            return total;
+        }
+
+        private static long copyStreamAscii(Stream input, Stream output, int bufferSize)
+        {
+            char[] buffer = new char[bufferSize];
+            int count = 0;
+            long total = 0;
+
+            using (StreamReader rdr = new StreamReader(input))
+            {
+                using (StreamWriter wtr = new StreamWriter(output, Encoding.ASCII))
+                {
+                    while((count = rdr.Read(buffer, 0, buffer.Length))>0)
+                    {
+                        wtr.Write(buffer, 0, count);
+                        total += count;
+                    }
+                }
+            }
+            return total;
+        }
+
+        private long copyStream(Stream input, Stream output)
+        {
+            if(_transferType == "I")
+            {
+                return copyStream(input, output, 4096);
+            }
+            else
+            {
+                return copyStreamAscii(input, output, 4096);
+            }
         }
     }
 }
