@@ -39,7 +39,7 @@ namespace SocketProgrammingAssignmentServer
                     //if we can parse the unit, we assume it is a port number
                     //and the program will be running in FTP Server mode
                     FtpServer server = new FtpServer();
-                    server.Start(port_number);
+                    server.Start();
 
                     //let them know they can press any key to exit, then wait for that event
                     Console.Write("Press any key to exit.");
